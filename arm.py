@@ -30,7 +30,12 @@ class Servos(PCA9685):
         self.zeroes = zeroes
 
     def move(self, segmentnumber, speed):
-        super().set_pwm(segmentnumber, 0, round(speed + self.zeroes[segmentnumber]))
+        pwm = round(speed + self.zeroes[segmentnumber])
+        if pwm < CONST_MIN_PWM:
+            pwm = CONST_MIN_PWM
+        if pwm > CONST_MAX_PWM:
+            pwm = CONST_MAX_PWM
+        super().set_pwm(segmentnumber, 0, pwm)
 
     def stop(self, segmentnumber):
         self.move(segmentnumber, 0)
@@ -40,10 +45,9 @@ class Servos(PCA9685):
 
 
 class Claw:
-    def __init__(self, portnumber, servos, isclosed=True):
+    def __init__(self, portnumber, isclosed=True):
         self.portnumber = portnumber
         self.closed = isclosed
-        self.servos = servos
 
     def close(self):
         self.servos.move(self.portnumber, CONST_CLAW_CLOSED)
@@ -96,4 +100,8 @@ class Arm:
 
     def getangle(self, segmentnumber):
         return self.segments.getangle(segmentnumber)
+
+    def stop(self):
+        for i in range(self.numberofsegments):
+            self.servos.stop(i)
 
